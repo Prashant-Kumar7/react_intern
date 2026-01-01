@@ -30,10 +30,17 @@ export function useImageReactions(imageId: string) {
     reactions: {},
   });
 
+  const filteredReactions = (data?.reactions || [])
+    .filter((r) => r.imageId === imageId)
+    .sort((a, b) => b.createdAt - a.createdAt);
+
+  // Debug logging
+  if (imageId && filteredReactions.length > 0) {
+    console.log(`Reactions for image ${imageId}:`, filteredReactions);
+  }
+
   return {
-    reactions: (data?.reactions || [])
-      .filter((r) => r.imageId === imageId)
-      .sort((a, b) => b.createdAt - a.createdAt),
+    reactions: filteredReactions,
     isLoading,
   };
 }

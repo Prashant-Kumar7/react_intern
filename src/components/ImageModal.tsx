@@ -48,9 +48,20 @@ export function ImageModal({ imageId, onClose }: ImageModalProps) {
     return acc;
   }, {} as Record<string, typeof reactions>);
 
-  const handleEmojiClick = (emoji: string) => {
-    if (imageId) {
-      addReaction(imageId, emoji);
+  const handleEmojiClick = async (emoji: string) => {
+    if (!imageId || !user) return;
+
+    // Check if user already has this reaction
+    const existingReaction = reactions.find(
+      (r) => r.userId === user.id && r.emoji === emoji
+    );
+
+    if (existingReaction) {
+      // Toggle off - remove reaction
+      await addReaction(imageId, emoji, existingReaction.id);
+    } else {
+      // Add new reaction
+      await addReaction(imageId, emoji);
     }
   };
 

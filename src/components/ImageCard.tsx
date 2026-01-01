@@ -28,6 +28,9 @@ export const ImageCard = memo(function ImageCard({
   const { addReaction, deleteReaction } = useImageActions();
   const user = useStore((state) => state.user);
 
+  // Debug: Log reactions
+  console.log(`ImageCard ${imageId} - Reactions:`, reactions);
+
   // Group reactions by emoji
   const reactionGroups = reactions.reduce((acc, reaction) => {
     if (!acc[reaction.emoji]) {
@@ -39,10 +42,30 @@ export const ImageCard = memo(function ImageCard({
 
   const userReactions = reactions.filter((r) => r.userId === user?.id);
 
-  const handleEmojiClick = (emoji: string) => {
-    console.log("Adding reaction:", emoji, "to image:", imageId);
-    if (emoji && imageId) {
-      addReaction(imageId, emoji);
+  const handleEmojiClick = async (emoji: string) => {
+    console.log("Adding reaction:", emoji, "to image:", imageId, "user:", user?.id);
+    if (!emoji || !imageId || !user) {
+      console.warn("Missing data:", { emoji, imageId, user: !!user });
+      return;
+    }
+
+    // Check if user already has this reaction
+    const existingReaction = reactions.find(
+      (r) => r.userId === user.id && r.emoji === emoji
+    );
+
+    if (existingReaction) {
+      // Toggle off - remove reaction
+      console.log("Toggling off reaction:", existingReaction.id);
+      await addReaction(imageId, emoji, existingReaction.id);
+    } else {
+      // Add new reaction
+      try {
+        await addReaction(imageId, emoji);
+        console.log("Reaction added, waiting for update...");
+      } catch (error) {
+        console.error("Error adding reaction:", error);
+      }
     }
   };
 

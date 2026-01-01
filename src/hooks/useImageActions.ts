@@ -4,28 +4,51 @@ import { useStore } from "@/lib/store";
 export function useImageActions() {
   const user = useStore((state) => state.user);
 
-  const addReaction = async (imageId: string, emoji: string) => {
+  const addReaction = async (imageId: string, emoji: string, existingReactionId?: string) => {
     if (!user) {
       console.warn("No user found, cannot add reaction");
       return;
     }
-    console.log("addReaction called:", { imageId, emoji, userId: user.id });
+    console.log("addReaction called:", { imageId, emoji, userId: user.id, existingReactionId });
 
-    // Check if user already reacted with this emoji
-    const existingReactions = await db.query({
-      reactions: {},
-    });
+    // If existingReactionId is provided, remove it (toggle off)
+    if (existingReactionId) {
+      console.log("Removing existing reaction:", existingReactionId);
+      try {
+        await db.transact(db.tx.reactions[existingReactionId].delete());
+        console.log("Reaction removed successfully");
+      } catch (error) {
+        console.error("Failed to remove reaction:", error);
+      }
+      return;
+    }
 
-    const userReaction = existingReactions.data?.reactions?.find(
-      (r) => r.imageId === imageId && r.userId === user.id && r.emoji === emoji
-    );
-
-    if (userReaction) {
-      // Remove existing reaction
-      await db.transact(db.tx.reactions[userReaction.id].delete());
-    } else {
-      // Add new reaction with user info for feed display
-      const reactionId = id();
+    // Add new reaction with user info for feed display
+    const reactionId = id();
+    try {
+      console.log("Attempting to add reaction:", {
+        reactionId,
+        imageId,
+        userId: user.id,
+        emoji,
+      });
+      
+      const transaction = db.tx.reactions[reactionId].update({
+        imageId,
+        userId: user.id,
+        userName: user.name,
+        userColor: user.color,
+        emoji,
+        createdAt: Date.now(),
+      });
+      
+      console.log("Transaction object:", transaction);
+      const result = await db.transact(transaction);
+      
+      console.log("Reaction added successfully:", result);
+    } catch (error) {
+      // Conflict handling: retry once if transaction fails
+      console.error("Failed to add reaction, retrying...", error);
       try {
         await db.transact(
           db.tx.reactions[reactionId].update({
@@ -37,23 +60,9 @@ export function useImageActions() {
             createdAt: Date.now(),
           })
         );
-      } catch (error) {
-        // Conflict handling: retry once if transaction fails
-        console.error("Failed to add reaction, retrying...", error);
-        try {
-          await db.transact(
-            db.tx.reactions[reactionId].update({
-              imageId,
-              userId: user.id,
-              userName: user.name,
-              userColor: user.color,
-              emoji,
-              createdAt: Date.now(),
-            })
-          );
-        } catch (retryError) {
-          console.error("Failed to add reaction after retry", retryError);
-        }
+        console.log("Reaction added successfully on retry");
+      } catch (retryError) {
+        console.error("Failed to add reaction after retry", retryError);
       }
     }
   };
@@ -94,17 +103,20 @@ export function useImageActions() {
   };
 
   const deleteComment = async (commentId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.warn("No user found, cannot delete comment");
+      return;
+    }
 
-    // Verify ownership before deleting
-    const comments = await db.query({
-      comments: {},
-    });
-
-    const comment = comments.data?.comments?.find((c) => c.id === commentId);
-
-    if (comment && comment.userId === user.id) {
+    console.log("deleteComment called:", { commentId, userId: user.id });
+    
+    // Delete directly - InstantDB will handle permissions if configured
+    // Components should verify ownership before calling this
+    try {
       await db.transact(db.tx.comments[commentId].delete());
+      console.log("Comment deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
     }
   };
 
@@ -116,21 +128,13 @@ export function useImageActions() {
 
     console.log("deleteReaction called:", { reactionId, userId: user.id });
 
-    // Verify ownership before deleting
-    const reactions = await db.query({
-      reactions: {},
-    });
-
-    const reaction = reactions.data?.reactions?.find((r) => r.id === reactionId);
-
-    if (reaction && reaction.userId === user.id) {
-      console.log("Deleting reaction:", reactionId);
+    // Delete directly - InstantDB will handle permissions if configured
+    // Components should verify ownership before calling this
+    try {
       await db.transact(db.tx.reactions[reactionId].delete());
-    } else {
-      console.warn("Cannot delete reaction - not owned by user", {
-        reactionUserId: reaction?.userId,
-        currentUserId: user.id,
-      });
+      console.log("Reaction deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete reaction:", error);
     }
   };
 

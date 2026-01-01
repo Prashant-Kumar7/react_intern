@@ -20,11 +20,33 @@ interface EmojiData {
 export function EmojiPickerButton({ onEmojiClick, className }: EmojiPickerButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleEmojiClick = (emojiData: EmojiData) => {
-    console.log("Emoji clicked:", emojiData);
-    if (emojiData?.emoji) {
-      onEmojiClick(emojiData.emoji);
+  const handleEmojiClick = (emojiData: any, event?: any) => {
+    console.log("Emoji clicked - full data:", emojiData);
+    console.log("Event:", event);
+    
+    // emoji-picker-react v4+ returns emojiObject with emoji property
+    // Handle both old and new API formats
+    let emoji: string | undefined;
+    
+    if (typeof emojiData === 'string') {
+      emoji = emojiData;
+    } else if (emojiData?.emoji) {
+      emoji = emojiData.emoji;
+    } else if (emojiData?.unified) {
+      // Convert unified code to emoji if needed
+      emoji = String.fromCodePoint(...emojiData.unified.split('-').map((hex: string) => parseInt(hex, 16)));
+    }
+    
+    if (emoji) {
+      console.log("Extracted emoji:", emoji);
+      onEmojiClick(emoji);
       setIsOpen(false);
+    } else {
+      console.error("No emoji found in data:", emojiData);
+      // Try to extract from any property
+      const allProps = Object.keys(emojiData || {});
+      console.error("Available properties:", allProps);
+      console.error("Full object:", JSON.stringify(emojiData, null, 2));
     }
   };
 
