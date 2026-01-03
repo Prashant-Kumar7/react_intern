@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import { db } from "@/lib/instantdb";
+import type { ReactNode } from "react";
 
 export function InstantDBProvider({ children }: { children: ReactNode }) {
   // InstantDB connection is handled globally via db.init()

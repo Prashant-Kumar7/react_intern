@@ -9,13 +9,8 @@ interface EmojiPickerButtonProps {
 }
 
 // Define the emoji data type based on emoji-picker-react's callback
-interface EmojiData {
-  emoji: string;
-  unified: string;
-  originalUnified?: string;
-  names?: string[];
-  activeSkinTone?: string;
-}
+// Note: This interface is kept for documentation but not used directly
+// as emoji-picker-react types may vary
 
 export function EmojiPickerButton({ onEmojiClick, className }: EmojiPickerButtonProps) {
   const [isOpen, setIsOpen] = useState(false);

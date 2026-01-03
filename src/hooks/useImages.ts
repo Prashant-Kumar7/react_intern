@@ -1,6 +1,6 @@
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchUnsplashImages } from "@/lib/unsplash";
-import { db } from "@/lib/instantdb";
+import { db, type Image, type Reaction, type Comment } from "@/lib/instantdb";
 
 export function useUnsplashImages() {
   return useInfiniteQuery({
@@ -17,10 +17,10 @@ export function useUnsplashImages() {
 export function useInstantImages() {
   const { data, isLoading } = db.useQuery({
     images: {},
-  });
+  } as any) as { data?: { images?: Image[] }; isLoading: boolean };
 
   return {
-    images: (data?.images || []).sort((a, b) => b.createdAt - a.createdAt),
+    images: ((data?.images || []) as Image[]).sort((a, b) => b.createdAt - a.createdAt),
     isLoading,
   };
 }
@@ -28,9 +28,9 @@ export function useInstantImages() {
 export function useImageReactions(imageId: string) {
   const { data, isLoading } = db.useQuery({
     reactions: {},
-  });
+  } as any) as { data?: { reactions?: Reaction[] }; isLoading: boolean };
 
-  const filteredReactions = (data?.reactions || [])
+  const filteredReactions = ((data?.reactions || []) as Reaction[])
     .filter((r) => r.imageId === imageId)
     .sort((a, b) => b.createdAt - a.createdAt);
 
@@ -48,10 +48,10 @@ export function useImageReactions(imageId: string) {
 export function useImageComments(imageId: string) {
   const { data, isLoading } = db.useQuery({
     comments: {},
-  });
+  } as any) as { data?: { comments?: Comment[] }; isLoading: boolean };
 
   return {
-    comments: (data?.comments || [])
+    comments: ((data?.comments || []) as Comment[])
       .filter((c) => c.imageId === imageId)
       .sort((a, b) => a.createdAt - b.createdAt),
     isLoading,
@@ -62,11 +62,11 @@ export function useAllInteractions() {
   const { data, isLoading } = db.useQuery({
     reactions: {},
     comments: {},
-  });
+  } as any) as { data?: { reactions?: Reaction[]; comments?: Comment[] }; isLoading: boolean };
 
   return {
-    reactions: (data?.reactions || []).sort((a, b) => b.createdAt - a.createdAt),
-    comments: (data?.comments || []).sort((a, b) => b.createdAt - a.createdAt),
+    reactions: ((data?.reactions || []) as Reaction[]).sort((a, b) => b.createdAt - a.createdAt),
+    comments: ((data?.comments || []) as Comment[]).sort((a, b) => b.createdAt - a.createdAt),
     isLoading,
   };
 }

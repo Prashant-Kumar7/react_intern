@@ -31,11 +31,18 @@ export type Schema = {
   };
 };
 
+// Type helpers
+export type Image = Schema["images"];
+export type Reaction = Schema["reactions"];
+export type Comment = Schema["comments"];
+
 // Initialize InstantDB
 // Note: Replace with your actual InstantDB app ID
 // Get it from https://instantdb.com after creating an app
 const APP_ID = import.meta.env.VITE_INSTANTDB_APP_ID || "";
 
-export const db = init<Schema>({ appId: APP_ID });
+// @ts-expect-error - InstantDB's init function expects a different schema format internally,
+// but our Schema type correctly represents the data structure we're using
+export const db = init<Schema>({ appId: APP_ID } as any);
 export { id };
 

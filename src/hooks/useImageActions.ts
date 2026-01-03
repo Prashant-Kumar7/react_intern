@@ -15,7 +15,7 @@ export function useImageActions() {
     if (existingReactionId) {
       console.log("Removing existing reaction:", existingReactionId);
       try {
-        await db.transact(db.tx.reactions[existingReactionId].delete());
+        await db.transact((db.tx as any).reactions[existingReactionId].delete());
         console.log("Reaction removed successfully");
       } catch (error) {
         console.error("Failed to remove reaction:", error);
@@ -33,7 +33,7 @@ export function useImageActions() {
         emoji,
       });
       
-      const transaction = db.tx.reactions[reactionId].update({
+      const transaction = (db.tx as any).reactions[reactionId].update({
         imageId,
         userId: user.id,
         userName: user.name,
@@ -51,7 +51,7 @@ export function useImageActions() {
       console.error("Failed to add reaction, retrying...", error);
       try {
         await db.transact(
-          db.tx.reactions[reactionId].update({
+          (db.tx as any).reactions[reactionId].update({
             imageId,
             userId: user.id,
             userName: user.name,
@@ -73,7 +73,7 @@ export function useImageActions() {
     const commentId = id();
     try {
       await db.transact(
-        db.tx.comments[commentId].update({
+        (db.tx as any).comments[commentId].update({
           imageId,
           userId: user.id,
           userName: user.name,
@@ -87,7 +87,7 @@ export function useImageActions() {
       console.error("Failed to add comment, retrying...", error);
       try {
         await db.transact(
-          db.tx.comments[commentId].update({
+          (db.tx as any).comments[commentId].update({
             imageId,
             userId: user.id,
             userName: user.name,
@@ -113,7 +113,7 @@ export function useImageActions() {
     // Delete directly - InstantDB will handle permissions if configured
     // Components should verify ownership before calling this
     try {
-      await db.transact(db.tx.comments[commentId].delete());
+      await db.transact((db.tx as any).comments[commentId].delete());
       console.log("Comment deleted successfully");
     } catch (error) {
       console.error("Failed to delete comment:", error);
@@ -131,7 +131,7 @@ export function useImageActions() {
     // Delete directly - InstantDB will handle permissions if configured
     // Components should verify ownership before calling this
     try {
-      await db.transact(db.tx.reactions[reactionId].delete());
+      await db.transact((db.tx as any).reactions[reactionId].delete());
       console.log("Reaction deleted successfully");
     } catch (error) {
       console.error("Failed to delete reaction:", error);

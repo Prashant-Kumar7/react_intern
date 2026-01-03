@@ -9,13 +9,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { useImageReactions, useImageComments } from "@/hooks/useImages";
 import { useImageActions } from "@/hooks/useImageActions";
 import { useStore } from "@/lib/store";
 import { useInstantImages } from "@/hooks/useImages";
 import { EmojiPickerButton } from "./EmojiPicker";
 import { Trash2, Send } from "lucide-react";
+import type { Image, Reaction, Comment } from "@/lib/instantdb";
 
 interface ImageModalProps {
   imageId: string | null;
@@ -34,26 +34,26 @@ export function ImageModal({ imageId, onClose }: ImageModalProps) {
 
   // Find image by ID or unsplashId (for images not yet synced)
   const selectedImageData = useStore((state) => state.selectedImageData);
-  const image = images.find((img) => img.id === imageId || img.unsplashId === imageId);
+  const image = images.find((img: Image) => img.id === imageId || img.unsplashId === imageId);
   
   // Use selectedImageData if available, otherwise use InstantDB image
   const displayImage = selectedImageData || image;
 
   // Group reactions by emoji
-  const reactionGroups = reactions.reduce((acc, reaction) => {
+  const reactionGroups = reactions.reduce((acc: Record<string, Reaction[]>, reaction: Reaction) => {
     if (!acc[reaction.emoji]) {
       acc[reaction.emoji] = [];
     }
     acc[reaction.emoji].push(reaction);
     return acc;
-  }, {} as Record<string, typeof reactions>);
+  }, {} as Record<string, Reaction[]>);
 
   const handleEmojiClick = async (emoji: string) => {
     if (!imageId || !user) return;
 
     // Check if user already has this reaction
     const existingReaction = reactions.find(
-      (r) => r.userId === user.id && r.emoji === emoji
+      (r: Reaction) => r.userId === user.id && r.emoji === emoji
     );
 
     if (existingReaction) {
@@ -110,10 +110,10 @@ export function ImageModal({ imageId, onClose }: ImageModalProps) {
               <div className="flex items-center gap-2 flex-wrap">
                 {Object.entries(reactionGroups).map(([emoji, emojiReactions]) => {
                   const isUserReaction = emojiReactions.some(
-                    (r) => r.userId === user?.id
+                    (r: Reaction) => r.userId === user?.id
                   );
                   const userReaction = emojiReactions.find(
-                    (r) => r.userId === user?.id
+                    (r: Reaction) => r.userId === user?.id
                   );
                   return (
                     <div key={emoji} className="flex items-center gap-1">
@@ -155,7 +155,7 @@ export function ImageModal({ imageId, onClose }: ImageModalProps) {
                     No comments yet. Be the first to comment!
                   </p>
                 ) : (
-                  comments.map((comment) => (
+                  comments.map((comment: Comment) => (
                     <div
                       key={comment.id}
                       className="flex gap-3 animate-in fade-in slide-in-from-bottom-2"

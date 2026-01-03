@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStore } from "@/lib/store";
-import { MessageCircle, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
+import type { Image, Reaction, Comment } from "@/lib/instantdb";
 
 export function Feed() {
   const { reactions, comments } = useAllInteractions();
@@ -15,7 +16,7 @@ export function Feed() {
   const isInitialMount = useRef(true);
 
   const imagesMap = useMemo(() => {
-    return new Map(images.map((img) => [img.id, img]));
+    return new Map(images.map((img: Image) => [img.id, img]));
   }, [images]);
 
   // Combine and sort all interactions by timestamp
@@ -32,7 +33,7 @@ export function Feed() {
       imageId: string;
     }> = [];
 
-    reactions.forEach((reaction) => {
+    reactions.forEach((reaction: Reaction) => {
       items.push({
         type: "reaction",
         id: reaction.id,
@@ -45,7 +46,7 @@ export function Feed() {
       });
     });
 
-    comments.forEach((comment) => {
+    comments.forEach((comment: Comment) => {
       items.push({
         type: "comment",
         id: comment.id,

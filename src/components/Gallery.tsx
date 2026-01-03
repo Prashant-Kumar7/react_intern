@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useUnsplashImages, useInstantImages } from "@/hooks/useImages";
 import { ImageCard } from "./ImageCard";
 import { useStore } from "@/lib/store";
-import { db, id } from "@/lib/instantdb";
+import { db, id, type Image } from "@/lib/instantdb";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -19,7 +19,7 @@ export function Gallery() {
 
   // Create a map of instant images by unsplashId
   const instantImagesMap = useMemo(() => {
-    return new Map(instantImages.map((img) => [img.unsplashId, img]));
+    return new Map(instantImages.map((img: Image) => [img.unsplashId, img]));
   }, [instantImages]);
 
   // Sync Unsplash images to InstantDB
@@ -32,14 +32,14 @@ export function Gallery() {
       for (const unsplashImage of allImages) {
         // Check if image already exists in InstantDB by unsplashId
         const exists = Array.from(instantImagesMap.values()).some(
-          (img) => img.unsplashId === unsplashImage.id
+          (img: Image) => img.unsplashId === unsplashImage.id
         );
         
         if (!exists) {
           // Add to InstantDB
           const imageId = id();
           await db.transact(
-            db.tx.images[imageId].update({
+            (db.tx as any).images[imageId].update({
               unsplashId: unsplashImage.id,
               url: unsplashImage.urls.regular,
               thumbUrl: unsplashImage.urls.thumb,
@@ -63,7 +63,7 @@ export function Gallery() {
     return unsplashImages.map((unsplashImg) => {
       // Find InstantDB image by unsplashId
       const instantImg = Array.from(instantImagesMap.values()).find(
-        (img) => img.unsplashId === unsplashImg.id
+        (img: Image) => img.unsplashId === unsplashImg.id
       );
       return {
         id: instantImg?.id || unsplashImg.id, // Use unsplashId as fallback
@@ -80,7 +80,7 @@ export function Gallery() {
     (image: { id: string; url: string; thumbUrl: string; description: string | null; author: string; unsplashId: string }) => {
       // Find the InstantDB image if it exists
       const instantImg = Array.from(instantImagesMap.values()).find(
-        (img) => img.unsplashId === image.unsplashId
+        (img: Image) => img.unsplashId === image.unsplashId
       );
       const finalId = instantImg?.id || image.id;
       setSelectedImage(finalId, {
@@ -116,7 +116,6 @@ export function Gallery() {
           <ImageCard
             key={image.id}
             imageId={image.id}
-            imageUrl={image.url}
             thumbUrl={image.thumbUrl}
             description={image.description}
             author={image.author}

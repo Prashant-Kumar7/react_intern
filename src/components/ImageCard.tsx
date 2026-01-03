@@ -4,12 +4,12 @@ import { useImageReactions } from "@/hooks/useImages";
 import { useImageActions } from "@/hooks/useImageActions";
 import { useStore } from "@/lib/store";
 import { EmojiPickerButton } from "./EmojiPicker";
-import { Heart, MessageCircle, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Reaction } from "@/lib/instantdb";
 
 interface ImageCardProps {
   imageId: string;
-  imageUrl: string;
   thumbUrl: string;
   description: string | null;
   author: string;
@@ -18,7 +18,6 @@ interface ImageCardProps {
 
 export const ImageCard = memo(function ImageCard({
   imageId,
-  imageUrl,
   thumbUrl,
   description,
   author,
@@ -32,15 +31,13 @@ export const ImageCard = memo(function ImageCard({
   console.log(`ImageCard ${imageId} - Reactions:`, reactions);
 
   // Group reactions by emoji
-  const reactionGroups = reactions.reduce((acc, reaction) => {
+  const reactionGroups = reactions.reduce((acc: Record<string, Reaction[]>, reaction: Reaction) => {
     if (!acc[reaction.emoji]) {
       acc[reaction.emoji] = [];
     }
     acc[reaction.emoji].push(reaction);
     return acc;
-  }, {} as Record<string, typeof reactions>);
-
-  const userReactions = reactions.filter((r) => r.userId === user?.id);
+  }, {} as Record<string, Reaction[]>);
 
   const handleEmojiClick = async (emoji: string) => {
     console.log("Adding reaction:", emoji, "to image:", imageId, "user:", user?.id);
@@ -51,7 +48,7 @@ export const ImageCard = memo(function ImageCard({
 
     // Check if user already has this reaction
     const existingReaction = reactions.find(
-      (r) => r.userId === user.id && r.emoji === emoji
+      (r: Reaction) => r.userId === user.id && r.emoji === emoji
     );
 
     if (existingReaction) {
@@ -84,8 +81,8 @@ export const ImageCard = memo(function ImageCard({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 flex-wrap gap-y-1">
             {Object.entries(reactionGroups).map(([emoji, emojiReactions]) => {
-              const isUserReaction = emojiReactions.some((r) => r.userId === user?.id);
-              const userReaction = emojiReactions.find((r) => r.userId === user?.id);
+              const isUserReaction = emojiReactions.some((r: Reaction) => r.userId === user?.id);
+              const userReaction = emojiReactions.find((r: Reaction) => r.userId === user?.id);
               return (
                 <div key={emoji} className="flex items-center gap-1">
                   <Button
